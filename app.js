@@ -1,6 +1,6 @@
 // --- Configura tu Supabase ---
-const SUPA_URL = 'https://<TU_PROYECTO>.supabase.co';
-const SUPA_KEY = '<TU_ANON_KEY>';
+const SUPA_URL = 'https://pgwwmcxemjwrjegnmuhh.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBnd3dtY3hlbWp3cmplZ25tdWhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODI0NzUsImV4cCI6MjA3MDA1ODQ3NX0.ygKXPGPKPFfG80AgodQ-7030_skyXLEyVjK3KbioNvM';
 const { createClient } = supabase;
 const supa = createClient(SUPA_URL, SUPA_KEY);
 
