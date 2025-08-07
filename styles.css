@@ -1,8 +1,0 @@
-body { font-family: 'Inter', sans-serif; }
-.flatpickr-calendar { background-color: #1f2937; border-color: #374151; }
-.flatpickr-day { color: #d1d5db; }
-.flatpickr-day:hover { background: #374151; }
-.flatpickr-day.selected { background-color: #3b82f6; border-color: #3b82f6; }
-.tab-btn.active { border-color: #3b82f6; color: #fff; }
-.loader { /* spinner styles */ }
-#notification-modal[aria-hidden="false"] div:focus { outline: 2px solid #3b82f6; }
