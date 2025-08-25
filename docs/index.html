@@ -1,123 +1,1178 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Gestión de Prensa</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1f2937">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Gestión de Prensa</title>
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Flatpickr -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Flatpickr (Calendario) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS (Exportar a Excel) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-  <!-- SheetJS -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- Lucide Icons -->
-  <script src="https://cdn.jsdelivr.net/npm/lucide-react@0.378.0/dist/lucide.min.js"></script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #111827;
+      }
+      .flatpickr-calendar {
+        background-color: #1f2937;
+        border-color: #374151;
+      }
+      .flatpickr-day {
+        color: #d1d5db;
+      }
+      .flatpickr-day:hover {
+        background-color: #374151;
+      }
+      .flatpickr-day.selected {
+        background-color: #3b82f6;
+        border-color: #3b82f6;
+      }
+      .flatpickr-weekday,
+      .flatpickr-monthDropdown-month,
+      .numInput {
+        color: #f9fafb;
+      }
+      .loader {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3b82f6;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .tab-btn.active {
+        border-color: #3b82f6;
+        color: #ffffff;
+      }
+    </style>
+  </head>
+  <body class="text-gray-200">
+    <div id="app-container">
+      <div id="app" class="container mx-auto p-4 md:p-8" style="display: none">
+        <header class="mb-6 text-center relative">
+          <h1 class="text-4xl font-bold text-white">Sistema de Gestión de Prensa</h1>
+          <p class="text-lg text-gray-400 mt-2">
+            Gestiona y visualiza las apariciones en medios de forma centralizada.
+          </p>
+          <button
+            id="logout-btn"
+            class="absolute top-0 right-0 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center text-sm"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="mr-2"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" x2="9" y1="12" y2="12" />
+            </svg>
+            Salir
+          </button>
+        </header>
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <!-- Navegación de Pestañas -->
+        <div class="mb-6 border-b border-gray-700">
+          <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+            <button
+              class="tab-btn active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center"
+              data-tab="ingreso"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="mr-2 h-5 w-5"
+              >
+                <path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4" />
+                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                <path d="M3 15h6" />
+                <path d="M6 12v6" />
+              </svg>
+              Añadir Nuevo Registro
+            </button>
+            <button
+              class="tab-btn text-gray-400 hover:text-white hover:border-gray-500 whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm flex items-center"
+              data-tab="estadisticas"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="mr-2 h-5 w-5"
+              >
+                <path d="M3 3v18h18" />
+                <path d="m19 9-5 5-4-4-3 3" />
+              </svg>
+              Estadísticas
+            </button>
+            <button
+              class="tab-btn text-gray-400 hover:text-white hover:border-gray-500 whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm flex items-center"
+              data-tab="historico"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="mr-2 h-5 w-5"
+              >
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+              </svg>
+              Histórico
+            </button>
+          </nav>
+        </div>
 
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body class="bg-gray-900 text-gray-200 font-inter">
+        <!-- Contenido de las Pestañas -->
+        <div>
+          <!-- Pestaña 1: Ingreso de Datos -->
+          <div id="ingreso-tab" class="tab-content">
+            <div class="max-w-2xl mx-auto bg-gray-800 p-6 rounded-2xl shadow-lg">
+              <form id="registro-form" class="space-y-5">
+                <div>
+                  <label for="fecha" class="block mb-2 text-sm font-medium text-gray-300">Fecha</label>
+                  <input
+                    type="text"
+                    id="fecha"
+                    class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                    placeholder="YYYY-MM-DD"
+                    required
+                  />
+                </div>
+                <div>
+                  <label for="titular" class="block mb-2 text-sm font-medium text-gray-300">Titular</label>
+                  <textarea
+                    id="titular"
+                    rows="3"
+                    class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                    placeholder="Titular de la noticia..."
+                    required
+                  ></textarea>
+                </div>
+                <div>
+                  <label for="unidad" class="block mb-2 text-sm font-medium text-gray-300"
+                    >Unidad PDI (separadas por coma)</label
+                  >
+                  <input
+                    type="text"
+                    id="unidad"
+                    class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                    placeholder="Ej: BH COC, LACRIM COC"
+                    required
+                  />
+                </div>
+                <div>
+                  <label for="medios" class="block mb-2 text-sm font-medium text-gray-300"
+                    >Medios (separados por coma)</label
+                  >
+                  <input
+                    type="text"
+                    id="medios"
+                    class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                    placeholder="Ej: BIOBIOCHILE, EL SUR, CANAL 9"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-3 text-center transition-colors duration-300"
+                >
+                  Guardar Registro
+                </button>
+              </form>
+            </div>
+          </div>
 
-  <div id="auth-container" class="text-center mb-4">
-    <button id="sign-in-btn" class="bg-blue-600 px-4 py-2 rounded">Ingresar con Google</button>
-    <button id="sign-out-btn" class="bg-red-600 px-4 py-2 rounded hidden">Cerrar sesión</button>
-  </div>
+          <!-- Pestaña 2: Estadísticas -->
+          <div id="estadisticas-tab" class="tab-content hidden">
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+              <div class="bg-gray-700/50 p-4 rounded-lg mb-6 flex flex-wrap items-center gap-4">
+                <div class="flex-grow">
+                  <label for="filtro-mes" class="text-sm font-medium text-gray-300">Mes</label>
+                  <select
+                    id="filtro-mes"
+                    class="w-full mt-1 bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+                  ></select>
+                </div>
+                <div class="flex-grow">
+                  <label for="filtro-anio" class="text-sm font-medium text-gray-300">Año</label>
+                  <select
+                    id="filtro-anio"
+                    class="w-full mt-1 bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+                  ></select>
+                </div>
+                <div class="self-end">
+                  <button
+                    id="generar-reporte-btn"
+                    class="w-full md:w-auto text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 transition-colors duration-300 flex items-center justify-center"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="mr-2 h-4 w-4"
+                    >
+                      <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                    Generar
+                  </button>
+                </div>
+                <div class="self-end">
+                  <button
+                    id="exportar-excel-btn"
+                    class="w-full md:w-auto text-white bg-gray-600 hover:bg-gray-700 focus:ring-4 focus:ring-gray-800 font-medium rounded-lg text-sm px-5 py-2.5 transition-colors duration-300 flex items-center justify-center"
+                    disabled
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="mr-2 h-4 w-4"
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" x2="12" y1="15" y2="3" />
+                    </svg>
+                    Exportar
+                  </button>
+                </div>
+              </div>
+              <div id="stats-container" class="relative">
+                <div id="loader" class="absolute inset-0 bg-gray-800/80 flex justify-center items-center z-10 hidden">
+                  <div class="loader"></div>
+                </div>
+                <div id="resumen-container" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div class="bg-gray-700 p-5 rounded-lg text-center">
+                    <h3 class="text-gray-400 text-sm font-medium">Hechos Noticiosos</h3>
+                    <p id="total-hechos" class="text-3xl font-bold text-white mt-1">0</p>
+                  </div>
+                  <div class="bg-gray-700 p-5 rounded-lg text-center">
+                    <h3 class="text-gray-400 text-sm font-medium">Apariciones Online</h3>
+                    <p id="total-online" class="text-3xl font-bold text-blue-400 mt-1">0</p>
+                  </div>
+                  <div class="bg-gray-700 p-5 rounded-lg text-center">
+                    <h3 class="text-gray-400 text-sm font-medium">Apariciones Escritas</h3>
+                    <p id="total-escritos" class="text-3xl font-bold text-green-400 mt-1">0</p>
+                  </div>
+                </div>
+                <div id="tables-container" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <!-- Tabla de Unidades -->
+                  <div class="bg-gray-700 p-4 rounded-lg">
+                    <h3 class="font-semibold mb-3 text-center">Apariciones por Unidad</h3>
+                    <div class="overflow-y-auto max-h-96">
+                      <table class="w-full text-sm text-left text-gray-400">
+                        <thead class="text-xs text-gray-300 uppercase bg-gray-600 sticky top-0">
+                          <tr>
+                            <th scope="col" class="px-6 py-3">Unidad</th>
+                            <th scope="col" class="px-6 py-3 text-right">Cantidad</th>
+                          </tr>
+                        </thead>
+                        <tbody id="unidades-table-body">
+                          <!-- Filas se insertarán aquí -->
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <!-- Tabla de Medios Online -->
+                  <div class="bg-gray-700 p-4 rounded-lg">
+                    <h3 class="font-semibold mb-3 text-center">Apariciones en Medios Online</h3>
+                    <div class="overflow-y-auto max-h-96">
+                      <table class="w-full text-sm text-left text-gray-400">
+                        <thead class="text-xs text-gray-300 uppercase bg-gray-600 sticky top-0">
+                          <tr>
+                            <th scope="col" class="px-6 py-3">Medio</th>
+                            <th scope="col" class="px-6 py-3 text-right">Cantidad</th>
+                          </tr>
+                        </thead>
+                        <tbody id="medios-online-table-body">
+                          <!-- Filas se insertarán aquí -->
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <!-- Tabla de Medios Escritos -->
+                  <div class="bg-gray-700 p-4 rounded-lg">
+                    <h3 class="font-semibold mb-3 text-center">Apariciones en Medios Escritos</h3>
+                    <div class="overflow-y-auto max-h-96">
+                      <table class="w-full text-sm text-left text-gray-400">
+                        <thead class="text-xs text-gray-300 uppercase bg-gray-600 sticky top-0">
+                          <tr>
+                            <th scope="col" class="px-6 py-3">Medio</th>
+                            <th scope="col" class="px-6 py-3 text-right">Cantidad</th>
+                          </tr>
+                        </thead>
+                        <tbody id="medios-escritos-table-body">
+                          <!-- Filas se insertarán aquí -->
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+                <p id="no-data-msg" class="text-center text-gray-400 py-16 hidden">
+                  Selecciona un período y haz clic en "Generar" para ver las estadísticas.
+                </p>
+              </div>
+            </div>
+          </div>
 
-  <div id="app-container" class="container mx-auto p-4 md:p-8 hidden">
-    <!-- Cabecera -->
-    <header class="mb-6 text-center">
-      <h1 class="text-4xl font-bold">Gestión de Prensa</h1>
-      <p class="text-lg text-gray-400 mt-2">Control centralizado de apariciones en medios</p>
-    </header>
-    
-    <!-- Navegación de pestañas -->
-    <div class="mb-6 border-b border-gray-700">
-      <nav class="-mb-px flex space-x-6">
-        <button class="tab-btn active" data-tab="ingreso"><i data-lucide="file-plus-2" class="mr-2"></i> Añadir Registro</button>
-        <button class="tab-btn" data-tab="estadisticas"><i data-lucide="bar-chart-3" class="mr-2"></i> Estadísticas</button>
-        <button class="tab-btn" data-tab="historico"><i data-lucide="history" class="mr-2"></i> Histórico</button>
-      </nav>
+          <!-- Pestaña 3: Histórico -->
+          <div id="historico-tab" class="tab-content hidden">
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+              <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <h3 class="text-xl font-semibold">Historial de Registros</h3>
+                <div class="relative">
+                  <input
+                    type="text"
+                    id="search-historico"
+                    class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
+                    placeholder="Buscar en historial..."
+                  />
+                  <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="w-5 h-5 text-gray-400"
+                    >
+                      <circle cx="11" cy="11" r="8" />
+                      <line x1="21" x2="16.65" y1="21" y2="16.65" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div id="historico-loader" class="flex justify-center items-center py-10 hidden">
+                <div class="loader"></div>
+              </div>
+              <div id="historico-no-data" class="text-center text-gray-400 py-16 hidden">
+                No hay registros para mostrar.
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-400">
+                  <thead class="text-xs text-gray-300 uppercase bg-gray-700">
+                    <tr>
+                      <th scope="col" class="px-6 py-3">Fecha</th>
+                      <th scope="col" class="px-6 py-3">Titular</th>
+                      <th scope="col" class="px-6 py-3">Unidad</th>
+                      <th scope="col" class="px-6 py-3">Medios Online</th>
+                      <th scope="col" class="px-6 py-3">Medios Escritos</th>
+                      <th scope="col" class="px-6 py-3">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="historico-table-body">
+                    <!-- Filas se insertarán aquí -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Pestaña Ingreso -->
-    <div id="ingreso-tab" class="tab-content">
-      <div class="bg-gray-800 p-6 rounded-2xl shadow-lg max-w-2xl mx-auto">
-        <form id="registro-form" class="space-y-5">
-          <div><label for="fecha">Fecha</label><input type="text" id="fecha" name="fecha" required></div>
-          <div><label for="titular">Titular</label><textarea id="titular" name="titular" rows="3" required></textarea></div>
-          <div><label for="unidad">Unidad PDI</label><input type="text" id="unidad" name="unidad" required></div>
-          <div><label for="medios-online">Medios Online</label><input type="text" id="medios-online" name="medios-online"></div>
-          <div><label for="medios-escritos">Medios Escritos</label><input type="text" id="medios-escritos" name="medios-escritos"></div>
-          <button type="submit" class="bg-blue-600 px-5 py-3 rounded w-full">Guardar Registro</button>
+    <!-- Modal para notificaciones y confirmaciones -->
+    <div
+      id="notification-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center hidden"
+    >
+      <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm text-center">
+        <div id="notification-icon" class="mx-auto mb-4"></div>
+        <h3 id="notification-title" class="text-lg font-medium text-white mb-2"></h3>
+        <p id="notification-message" class="text-sm text-gray-300 mb-6"></p>
+        <div id="notification-buttons" class="flex justify-center gap-4">
+          <!-- Botones se insertarán aquí -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para editar registros -->
+    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-start pt-16 hidden">
+      <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-2xl">
+        <h2 class="text-2xl font-semibold mb-6 text-white">Editar Registro</h2>
+        <form id="edit-form" class="space-y-5">
+          <input type="hidden" id="edit-id" />
+          <div>
+            <label for="edit-fecha" class="block mb-2 text-sm font-medium text-gray-300">Fecha</label>
+            <input
+              type="text"
+              id="edit-fecha"
+              class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              required
+            />
+          </div>
+          <div>
+            <label for="edit-titular" class="block mb-2 text-sm font-medium text-gray-300">Titular</label>
+            <textarea
+              id="edit-titular"
+              rows="3"
+              class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              required
+            ></textarea>
+          </div>
+          <div>
+            <label for="edit-unidad" class="block mb-2 text-sm font-medium text-gray-300"
+              >Unidad PDI (separadas por coma)</label
+            >
+            <input
+              type="text"
+              id="edit-unidad"
+              class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              required
+            />
+          </div>
+          <div>
+            <label for="edit-medios" class="block mb-2 text-sm font-medium text-gray-300"
+              >Medios (separados por coma)</label
+            >
+            <input
+              type="text"
+              id="edit-medios"
+              class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+            />
+          </div>
+          <div class="flex justify-end gap-4 pt-4">
+            <button
+              type="button"
+              id="edit-cancel-btn"
+              class="text-gray-300 bg-gray-600 hover:bg-gray-700 focus:ring-4 focus:outline-none focus:ring-gray-800 font-medium rounded-lg text-sm px-5 py-2.5"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5"
+            >
+              Guardar Cambios
+            </button>
+          </div>
         </form>
       </div>
     </div>
 
-    <!-- Pestaña Estadísticas -->
-    <div id="estadisticas-tab" class="tab-content hidden">
-      <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div><h3 class="mb-2">Apariciones por Unidad</h3><canvas id="unidades-chart"></canvas></div>
-          <div><h3 class="mb-2">Top Medios</h3><canvas id="medios-chart"></canvas></div>
-        </div>
-        <button id="exportar-excel-btn" class="bg-gray-600 px-5 py-2 rounded mt-4" disabled>Exportar</button>
-      </div>
-    </div>
+    <script type="module">
+      // --- MÓDULOS DE FIREBASE Y ESTADO DE LA APP ---
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        getDocs,
+        query,
+        where,
+        orderBy,
+        doc,
+        updateDoc,
+        deleteDoc,
+        serverTimestamp,
+        Timestamp,
+      } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+      import {
+        getAuth,
+        GoogleAuthProvider,
+        signInWithPopup,
+        onAuthStateChanged,
+        signOut,
+      } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
 
-    <!-- Pestaña Histórico -->
-    <div id="historico-tab" class="tab-content hidden">
-      <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-        <div class="mb-4 flex flex-wrap gap-4">
-          <input id="search-historico" type="text" placeholder="Buscar…">
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-gray-400">
-            <thead><tr><th>Fecha</th><th>Titular</th><th>Unidad</th><th>Medios</th><th>Editar</th><th>Borrar</th></tr></thead>
-            <tbody id="historico-table-body"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyBF0dq9C9O3VbugejlsWEgkvCdHMwr3laM",
+        authDomain: "sistema-gestion-de-prensa-pdi.firebaseapp.com",
+        projectId: "sistema-gestion-de-prensa-pdi",
+        storageBucket: "sistema-gestion-de-prensa-pdi.appspot.com",
+        messagingSenderId: "414092377544",
+        appId: "1:414092377544:web:85c4e3db5ffc324ab354fd",
+        measurementId: "G-HV8CK4L9JN",
+      };
 
-  <!-- Modal Editar -->
-  <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden">
-    <div class="bg-gray-800 p-6 rounded-lg max-w-md mx-auto mt-20">
-      <h3 class="text-white mb-4">Editar Registro</h3>
-      <form id="edit-form" class="space-y-4">
-        <input type="text" id="edit-fecha" required>
-        <textarea id="edit-titular" rows="2" required></textarea>
-        <input type="text" id="edit-unidad" required>
-        <input type="text" id="edit-medios-online">
-        <input type="text" id="edit-medios-escritos">
-        <button type="button" id="edit-save-btn" class="bg-yellow-500 px-4 py-2 rounded">Guardar cambios</button>
-        <button type="button" id="edit-cancel-btn" class="bg-gray-600 px-4 py-2 rounded">Cancelar</button>
-      </form>
-    </div>
-  </div>
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const auth = getAuth(app);
+      const provider = new GoogleAuthProvider();
 
-  <!-- Modal Notificación -->
-  <div id="notification-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden" tabindex="0" role="alertdialog">
-    <div class="bg-gray-800 p-6 rounded-lg max-w-sm mx-auto mt-20 text-center">
-      <div id="notification-icon"></div>
-      <h3 id="notification-title" class="text-white mt-2"></h3>
-      <p id="notification-message" class="text-gray-300 mt-2"></p>
-      <button id="notification-close-btn" class="bg-blue-600 px-4 py-2 rounded mt-4">Cerrar</button>
-    </div>
-  </div>
+      let currentUser = null;
+      let reporteActual = { df_crudo: [], estadisticas: {} };
+      let historicoData = [],
+        historicoLoaded = false;
+      let editCalendar;
+      let mainCalendar;
 
-  <script src="app.js"></script>
-</body>
+      // --- LÓGICA DE AUTENTICACIÓN Y UI ---
+      document.addEventListener("DOMContentLoaded", () => {
+        const appContent = document.getElementById("app");
+        const loginContainer = document.createElement("div");
+        loginContainer.id = "login-container";
+        loginContainer.innerHTML = `
+                <div class="h-screen flex flex-col justify-center items-center text-center">
+                    <h1 class="text-4xl font-bold text-white mb-4">Sistema de Gestión de Prensa</h1>
+                    <p class="text-lg text-gray-400 mb-8">Por favor, inicia sesión para continuar.</p>
+                    <button id="login-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center">
+                        <svg class="w-6 h-6 mr-3" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.904,36.213,44,30.608,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path></svg>
+                        Iniciar Sesión con Google
+                    </button>
+                </div>
+            `;
+        document.body.appendChild(loginContainer);
+        document.getElementById("login-btn").addEventListener("click", async () => {
+          const loginBtn = document.getElementById("login-btn");
+          loginBtn.disabled = true;
+          loginBtn.innerHTML = `<div class="loader mr-3" style="width: 24px; height: 24px; border-width: 2px;"></div> Conectando...`;
+          try {
+            await signInWithPopup(auth, provider);
+          } catch (error) {
+            console.error("Error de inicio de sesión:", error);
+            showNotification({
+              type: "error",
+              title: "Error de Sesión",
+              message: "No se pudo iniciar sesión. Por favor, intenta de nuevo.",
+            });
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = `Iniciar Sesión con Google`;
+          }
+        });
+
+        onAuthStateChanged(auth, (user) => {
+          if (user) {
+            currentUser = user;
+            loginContainer.style.display = "none";
+            appContent.style.display = "block";
+            runApp();
+          } else {
+            currentUser = null;
+            loginContainer.style.display = "block";
+            appContent.style.display = "none";
+          }
+        });
+      });
+
+      function runApp() {
+        try {
+          setupUI();
+          // Cargar datos históricos tan pronto como el usuario inicie sesión
+          cargarHistorico();
+        } catch (error) {
+          console.error("Error al ejecutar la aplicación:", error);
+        }
+      }
+
+      function setupUI() {
+        mainCalendar = flatpickr("#fecha", {
+          dateFormat: "Y-m-d",
+          defaultDate: "today",
+          altInput: true,
+          altFormat: "d M, Y",
+        });
+        editCalendar = flatpickr("#edit-fecha", { dateFormat: "Y-m-d", altInput: true, altFormat: "d M, Y" });
+        cargarFiltrosFecha();
+        setupTabs();
+
+        document.getElementById("logout-btn").addEventListener("click", () => signOut(auth));
+        document.getElementById("registro-form").addEventListener("submit", guardarRegistro);
+        document.getElementById("generar-reporte-btn").addEventListener("click", generarReporte);
+        document.getElementById("exportar-excel-btn").addEventListener("click", exportarExcel);
+        document.getElementById("search-historico").addEventListener("input", filtrarHistorico);
+        document.getElementById("edit-form").addEventListener("submit", handleUpdateSubmit);
+        document
+          .getElementById("edit-cancel-btn")
+          .addEventListener("click", () => document.getElementById("edit-modal").classList.add("hidden"));
+
+        document.getElementById("no-data-msg").classList.remove("hidden");
+        document.getElementById("resumen-container").classList.add("hidden");
+        document.getElementById("tables-container").classList.add("hidden");
+      }
+
+      function setupTabs() {
+        const tabs = document.querySelectorAll(".tab-btn");
+        const contents = document.querySelectorAll(".tab-content");
+
+        tabs.forEach((tab) => {
+          tab.addEventListener("click", () => {
+            tabs.forEach((t) => t.classList.remove("active", "text-white"));
+            contents.forEach((c) => c.classList.add("hidden"));
+
+            tab.classList.add("active", "text-white");
+            tab.classList.remove("text-gray-400");
+            document.getElementById(tab.dataset.tab + "-tab").classList.remove("hidden");
+
+            if (tab.dataset.tab === "historico" && !historicoLoaded) {
+              cargarHistorico();
+            }
+          });
+        });
+      }
+
+      function cargarFiltrosFecha() {
+        const mesSelect = document.getElementById("filtro-mes");
+        const anioSelect = document.getElementById("filtro-anio");
+        const meses = [
+          "Enero",
+          "Febrero",
+          "Marzo",
+          "Abril",
+          "Mayo",
+          "Junio",
+          "Julio",
+          "Agosto",
+          "Septiembre",
+          "Octubre",
+          "Noviembre",
+          "Diciembre",
+        ];
+        const anioActual = new Date().getFullYear();
+
+        mesSelect.innerHTML = meses.map((m, i) => `<option value="${i + 1}">${m}</option>`).join("");
+        anioSelect.innerHTML = Array.from({ length: 5 }, (_, i) => anioActual - i)
+          .map((a) => `<option value="${a}">${a}</option>`)
+          .join("");
+        mesSelect.value = new Date().getMonth() + 1;
+        anioSelect.value = anioActual;
+      }
+
+      function processMedios(mediosInput) {
+        const mediosDuplicados = [
+          "EL SUR",
+          "LA ESTRELLA",
+          "LA TRIBUNA",
+          "EL MERCURIO",
+          "DIARIO CONCEPCION",
+          "LA TERCERA",
+          "LUN",
+          "HOYXHOY",
+          "LA SEGUNDA",
+        ];
+        const todosLosMedios = mediosInput
+          .split(",")
+          .map((m) => m.trim().toUpperCase())
+          .filter(Boolean);
+        let mediosOnline = [];
+        let mediosEscritos = [];
+        todosLosMedios.forEach((medio) => {
+          mediosOnline.push(medio);
+          if (mediosDuplicados.includes(medio)) {
+            mediosEscritos.push(medio);
+          }
+        });
+        return { mediosOnline, mediosEscritos };
+      }
+
+      async function guardarRegistro(e) {
+        e.preventDefault();
+        if (!currentUser) {
+          showNotification({
+            type: "error",
+            title: "Error de Autenticación",
+            message: "No se ha iniciado sesión. Por favor, recarga la página.",
+          });
+          return;
+        }
+        const form = e.target;
+        const { mediosOnline, mediosEscritos } = processMedios(form.querySelector("#medios").value);
+
+        const fechaStr = form.querySelector("#fecha").value;
+        if (!fechaStr) {
+          showNotification({ type: "error", title: "Campo Incompleto", message: "Por favor, selecciona una fecha." });
+          return;
+        }
+
+        const registro = {
+          fecha: Timestamp.fromDate(new Date(fechaStr + "T00:00:00")),
+          titular: form.querySelector("#titular").value.trim(),
+          unidad: form.querySelector("#unidad").value.trim(),
+          medios_online: mediosOnline.join(", "),
+          medios_escritos: mediosEscritos.join(", "),
+          createdAt: serverTimestamp(),
+          owner: currentUser.uid,
+        };
+
+        if (!registro.titular || !registro.unidad) {
+          showNotification({
+            type: "error",
+            title: "Campos Incompletos",
+            message: "Por favor, completa los campos Titular y Unidad.",
+          });
+          return;
+        }
+        try {
+          const docRef = await addDoc(collection(db, "noticias"), registro);
+          console.log("Registro guardado en Firestore con ID:", docRef.id);
+          showNotification({ type: "success", title: "Éxito", message: "El registro se ha guardado correctamente." });
+          form.reset();
+          mainCalendar.setDate("today");
+          historicoLoaded = false;
+        } catch (error) {
+          console.error("Error al guardar:", error);
+          showNotification({
+            type: "error",
+            title: "Error de Base de Datos",
+            message: `No se pudo guardar. Razón: ${error.message}`,
+          });
+        }
+      }
+
+      async function generarReporte() {
+        const mes = parseInt(document.getElementById("filtro-mes").value);
+        const anio = parseInt(document.getElementById("filtro-anio").value);
+        const startDate = Timestamp.fromDate(new Date(anio, mes - 1, 1));
+        const endDate = Timestamp.fromDate(new Date(anio, mes, 0, 23, 59, 59));
+
+        document.getElementById("loader").classList.remove("hidden");
+        try {
+          const q = query(
+            collection(db, "noticias"),
+            where("owner", "==", currentUser.uid),
+            where("fecha", ">=", startDate),
+            where("fecha", "<=", endDate)
+          );
+          const querySnapshot = await getDocs(q);
+          const datos = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+          if (datos.length === 0) {
+            showNotification({
+              type: "info",
+              title: "Sin Datos",
+              message: "No se encontraron registros para el período seleccionado.",
+            });
+            limpiarDashboard();
+            return;
+          }
+          procesarYMostrarEstadisticas(datos);
+        } catch (error) {
+          showNotification({
+            type: "error",
+            title: "Error de Consulta",
+            message: `No se pudieron obtener los datos. Razón: ${error.message}`,
+          });
+        } finally {
+          document.getElementById("loader").classList.add("hidden");
+        }
+      }
+
+      async function cargarHistoricoDebug() {
+        const q = query(collection(db, "noticias"), orderBy("fecha", "desc"));
+        const querySnapshot = await getDocs(q);
+        const todos = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        console.log("Todos los registros de noticias:", todos);
+      }
+
+      // aca toy
+      async function cargarHistorico() {
+        if (historicoLoaded) return;
+        historicoLoaded = true;
+        document.getElementById("historico-loader").classList.remove("hidden");
+        document.getElementById("historico-no-data").classList.add("hidden");
+        document.getElementById("historico-table-body").innerHTML = "";
+        try {
+          console.log("Cargando histórico para el usuario:", currentUser.uid);
+          const q = query(collection(db, "noticias"), where("owner", "==", currentUser.uid), orderBy("fecha", "desc"));
+          //const q = query(collection(db, "noticias"), orderBy("fecha", "desc"));
+          const querySnapshot = await getDocs(q);
+          console.log(
+            "Docs sin filtrar:",
+            querySnapshot.docs.map((d) => d.data())
+          );
+          console.log("Firestore devolvió:", querySnapshot.size, "documentos.");
+
+          // querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          historicoData = querySnapshot.docs.slice(0, 3).map(doc => ({ id: doc.id, ...doc.data() }));//
+        //  alert(historicoData);
+          if (historicoData.length > 0) {
+            console.log("Primer documento recibido:", historicoData[0]);
+            renderHistoricoTable(historicoData);
+          } else {
+            document.getElementById("historico-no-data").classList.remove("hidden");
+          }
+        } catch (error) {
+          console.error("Error detallado al cargar histórico:", error);
+          showNotification({
+            type: "error",
+            title: "Error de Consulta",
+            message: `No se pudo cargar el historial. Razón: ${error.message}`,
+          });
+        } finally {
+          document.getElementById("historico-loader").classList.add("hidden");
+        }
+      }
+
+      // async function cargarHistorico() {
+      //     if (historicoLoaded) return;
+      //     historicoLoaded = true;
+      //     document.getElementById('historico-loader').classList.remove('hidden');
+      //     document.getElementById('historico-no-data').classList.add('hidden');
+      //     document.getElementById('historico-table-body').innerHTML = '';
+      //     try {
+      //         console.log("Cargando histórico para el usuario:", currentUser.uid);
+      //         const q = query(collection(db, "noticias"), where("owner", "==", currentUser.uid), orderBy("fecha", "desc"));
+      //         const querySnapshot = await getDocs(q);
+      //         console.log("Firestore devolvió:", querySnapshot.size, "documentos.");
+
+      //         historicoData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      //         if (historicoData.length > 0) {
+      //             console.log("Primer documento recibido:", historicoData[0]);
+      //             renderHistoricoTable(historicoData);
+      //         } else {
+      //             document.getElementById('historico-no-data').classList.remove('hidden');
+      //         }
+      //     } catch (error) {
+      //         console.error("Error detallado al cargar histórico:", error);
+      //         showNotification({ type: 'error', title: 'Error de Consulta', message: `No se pudo cargar el historial. Razón: ${error.message}` });
+      //     } finally {
+      //         document.getElementById('historico-loader').classList.add('hidden');
+      //     }
+      // }
+
+      function formatDate(timestamp) {
+        if (!timestamp || !timestamp.toDate) return "N/A";
+        const date = timestamp.toDate();
+        const months = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = months[date.getMonth()];
+        const year = String(date.getFullYear()).slice(-2);
+        return `${day}.${month}.${year}`;
+      }
+
+      function renderHistoricoTable(datos) {
+        const tableBody = document.getElementById("historico-table-body");
+        if (datos.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-400">No se encontraron resultados.</td></tr>`;
+          return;
+        }
+        tableBody.innerHTML = datos
+          .map(
+            (d) => `
+                <tr class="bg-gray-800 border-b border-gray-700 hover:bg-gray-600/50">
+                    <td class="px-6 py-4">${formatDate(d.fecha)}</td>
+                    <td class="px-6 py-4">${d.titular}</td>
+                    <td class="px-6 py-4">${d.unidad}</td>
+                    <td class="px-6 py-4">${d.medios_online || "N/A"}</td>
+                    <td class="px-6 py-4">${d.medios_escritos || "N/A"}</td>
+                    <td class="px-6 py-4 flex items-center gap-2">
+                        <button onclick="openEditModal('${d.id}')" class="p-1 text-blue-400 hover:text-blue-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                        </button>
+                        <button onclick="handleDeleteClick('${d.id}')" class="p-1 text-red-400 hover:text-red-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                        </button>
+                    </td>
+                </tr>
+            `
+          )
+          .join("");
+      }
+
+      function filtrarHistorico(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const filteredData = historicoData.filter(
+          (d) =>
+            d.titular.toLowerCase().includes(searchTerm) ||
+            (d.unidad && d.unidad.toLowerCase().includes(searchTerm)) ||
+            (d.medios_online && d.medios_online.toLowerCase().includes(searchTerm)) ||
+            (d.medios_escritos && d.medios_escritos.toLowerCase().includes(searchTerm))
+        );
+        renderHistoricoTable(filteredData);
+      }
+
+      window.openEditModal = (id) => {
+        const record = historicoData.find((r) => r.id === id);
+        if (!record) return;
+        document.getElementById("edit-id").value = record.id;
+        editCalendar.setDate(record.fecha.toDate(), true);
+        document.getElementById("edit-titular").value = record.titular;
+        document.getElementById("edit-unidad").value = record.unidad;
+        const online = record.medios_online ? record.medios_online.split(", ") : [];
+        const escritos = record.medios_escritos ? record.medios_escritos.split(", ") : [];
+        const allMedios = [...new Set([...online, ...escritos])];
+        document.getElementById("edit-medios").value = allMedios.join(", ");
+        document.getElementById("edit-modal").classList.remove("hidden");
+      };
+
+      async function handleUpdateSubmit(e) {
+        e.preventDefault();
+        const id = document.getElementById("edit-id").value;
+        const { mediosOnline, mediosEscritos } = processMedios(document.getElementById("edit-medios").value);
+        const fechaStr = document.getElementById("edit-fecha").value;
+
+        const updatedRecord = {
+          fecha: Timestamp.fromDate(new Date(fechaStr + "T00:00:00")),
+          titular: document.getElementById("edit-titular").value.trim(),
+          unidad: document.getElementById("edit-unidad").value.trim(),
+          medios_online: mediosOnline.join(", "),
+          medios_escritos: mediosEscritos.join(", "),
+        };
+        const recordRef = doc(db, "noticias", id);
+        await updateDoc(recordRef, updatedRecord);
+        document.getElementById("edit-modal").classList.add("hidden");
+        showNotification({ type: "success", title: "Éxito", message: "Registro actualizado correctamente." });
+        historicoLoaded = false;
+        cargarHistorico();
+      }
+
+      window.handleDeleteClick = (id) => {
+        showNotification({
+          type: "confirm",
+          title: "Confirmar Eliminación",
+          message: "¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.",
+          buttons: [
+            { text: "Cancelar", class: "bg-gray-600 hover:bg-gray-700", action: hideNotification },
+            { text: "Sí, Eliminar", class: "bg-red-600 hover:bg-red-700", action: () => deleteRecord(id) },
+          ],
+        });
+      };
+
+      async function deleteRecord(id) {
+        await deleteDoc(doc(db, "noticias", id));
+        hideNotification();
+        showNotification({ type: "success", title: "Éxito", message: "Registro eliminado correctamente." });
+        historicoLoaded = false;
+        cargarHistorico();
+      }
+
+      function procesarYMostrarEstadisticas(datos) {
+        const totalHechos = datos.length;
+        let totalOnline = 0,
+          totalEscritos = 0;
+        const statsUnidad = {},
+          statsMedioOnline = {},
+          statsMedioEscrito = {};
+        const limpiarYContar = (str) =>
+          str
+            ? str
+                .split(",")
+                .map((s) => s.trim().toUpperCase())
+                .filter(Boolean)
+            : [];
+
+        datos.forEach((d) => {
+          const online = limpiarYContar(d.medios_online);
+          const escritos = limpiarYContar(d.medios_escritos);
+          const unidades = limpiarYContar(d.unidad);
+          totalOnline += online.length;
+          totalEscritos += escritos.length;
+          unidades.forEach((unidad) => {
+            statsUnidad[unidad] = (statsUnidad[unidad] || 0) + 1;
+          });
+          online.forEach((medio) => {
+            statsMedioOnline[medio] = (statsMedioOnline[medio] || 0) + 1;
+          });
+          escritos.forEach((medio) => {
+            statsMedioEscrito[medio] = (statsMedioEscrito[medio] || 0) + 1;
+          });
+        });
+
+        const statsUnidadSorted = Object.entries(statsUnidad).sort(([, a], [, b]) => b - a);
+        const statsMedioOnlineSorted = Object.entries(statsMedioOnline).sort(([, a], [, b]) => b - a);
+        const statsMedioEscritoSorted = Object.entries(statsMedioEscrito).sort(([, a], [, b]) => b - a);
+
+        reporteActual = {
+          df_crudo: datos,
+          estadisticas: {
+            total_hechos: totalHechos,
+            total_online: totalOnline,
+            total_escritos: totalEscritos,
+            stats_unidad: statsUnidadSorted.map(([label, value]) => ({ Unidad: label, Cantidad: value })),
+            stats_medio_online: statsMedioOnlineSorted.map(([label, value]) => ({ Medio: label, Cantidad: value })),
+            stats_medio_escrito: statsMedioEscritoSorted.map(([label, value]) => ({ Medio: label, Cantidad: value })),
+          },
+        };
+
+        document.getElementById("no-data-msg").classList.add("hidden");
+        ["resumen-container", "tables-container"].forEach((id) =>
+          document.getElementById(id).classList.remove("hidden")
+        );
+        document.getElementById("total-hechos").textContent = totalHechos;
+        document.getElementById("total-online").textContent = totalOnline;
+        document.getElementById("total-escritos").textContent = totalEscritos;
+
+        renderStatsTable("unidades-table-body", reporteActual.estadisticas.stats_unidad, ["Unidad", "Cantidad"]);
+        renderStatsTable("medios-online-table-body", reporteActual.estadisticas.stats_medio_online, [
+          "Medio",
+          "Cantidad",
+        ]);
+        renderStatsTable("medios-escritos-table-body", reporteActual.estadisticas.stats_medio_escrito, [
+          "Medio",
+          "Cantidad",
+        ]);
+
+        document.getElementById("exportar-excel-btn").disabled = false;
+      }
+
+      function renderStatsTable(tableBodyId, data, columnNames) {
+        const tableBody = document.getElementById(tableBodyId);
+        if (!tableBody) return;
+        if (data.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="2" class="text-center py-4 px-6">Sin datos</td></tr>`;
+          return;
+        }
+        tableBody.innerHTML = data
+          .map(
+            (item) => `
+                <tr class="border-b border-gray-600">
+                    <td class="px-6 py-2">${item[columnNames[0]]}</td>
+                    <td class="px-6 py-2 text-right font-mono">${item[columnNames[1]]}</td>
+                </tr>
+            `
+          )
+          .join("");
+      }
+
+      function limpiarDashboard() {
+        document.getElementById("no-data-msg").classList.remove("hidden");
+        ["resumen-container", "tables-container"].forEach((id) => document.getElementById(id).classList.add("hidden"));
+        ["total-hechos", "total-online", "total-escritos"].forEach(
+          (id) => (document.getElementById(id).textContent = "0")
+        );
+
+        document.getElementById("unidades-table-body").innerHTML = "";
+        document.getElementById("medios-online-table-body").innerHTML = "";
+        document.getElementById("medios-escritos-table-body").innerHTML = "";
+
+        document.getElementById("exportar-excel-btn").disabled = true;
+      }
+
+      function exportarExcel() {
+        const { df_crudo, estadisticas } = reporteActual;
+        if (df_crudo.length === 0) return;
+        const wb = XLSX.utils.book_new();
+        const resumen_ws = XLSX.utils.aoa_to_sheet([
+          ["Métrica", "Valor"],
+          ["Total Hechos Noticiosos", estadisticas.total_hechos],
+          ["Apariciones en Medios Online", estadisticas.total_online],
+          ["Apariciones Medios Escritos", estadisticas.total_escritos],
+        ]);
+        XLSX.utils.book_append_sheet(wb, resumen_ws, "Resumen General");
+        const crudo_ws = XLSX.utils.json_to_sheet(
+          df_crudo.map((d) => ({
+            Fecha: formatDate(d.fecha),
+            Titular: d.titular,
+            Unidad: d.unidad,
+            "Medios Online": d.medios_online,
+            "Medios Escritos": d.medios_escritos,
+          }))
+        );
+        XLSX.utils.book_append_sheet(wb, crudo_ws, "Datos Crudos");
+        const unidad_ws = XLSX.utils.json_to_sheet(estadisticas.stats_unidad);
+        XLSX.utils.book_append_sheet(wb, unidad_ws, "Estadísticas por Unidad");
+        const medio_online_ws = XLSX.utils.json_to_sheet(estadisticas.stats_medio_online);
+        XLSX.utils.book_append_sheet(wb, medio_online_ws, "Estadísticas Medios Online");
+        const medio_escrito_ws = XLSX.utils.json_to_sheet(estadisticas.stats_medio_escrito);
+        XLSX.utils.book_append_sheet(wb, medio_escrito_ws, "Estadísticas Medios Escritos");
+
+        const mes =
+          document.getElementById("filtro-mes").options[document.getElementById("filtro-mes").selectedIndex].text;
+        const anio = document.getElementById("filtro-anio").value;
+        XLSX.writeFile(wb, `Reporte_Prensa_${mes}_${anio}.xlsx`);
+      }
+
+      function showNotification({ type, title, message, buttons }) {
+        const modal = document.getElementById("notification-modal");
+        const iconContainer = document.getElementById("notification-icon");
+        const buttonsContainer = document.getElementById("notification-buttons");
+        const checkIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-green-600"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        const xIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-red-600"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+        const infoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-blue-600"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+        const confirmIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-yellow-500"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" x2="12" y1="9" y2="13"></line><line x1="12" x2="12.01" y1="17" y2="17"></line></svg>`;
+
+        let iconHtml = "";
+        if (type === "success")
+          iconHtml = `<div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">${checkIcon}</div>`;
+        else if (type === "error")
+          iconHtml = `<div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">${xIcon}</div>`;
+        else if (type === "confirm")
+          iconHtml = `<div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">${confirmIcon}</div>`;
+        else
+          iconHtml = `<div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">${infoIcon}</div>`;
+
+        iconContainer.innerHTML = iconHtml;
+        document.getElementById("notification-title").textContent = title;
+        document.getElementById("notification-message").textContent = message;
+
+        buttonsContainer.innerHTML = "";
+        if (buttons) {
+          buttons.forEach((btn) => {
+            const buttonEl = document.createElement("button");
+            buttonEl.textContent = btn.text;
+            buttonEl.className = `text-white font-medium rounded-lg text-sm px-5 py-2.5 ${btn.class}`;
+            buttonEl.onclick = btn.action;
+            buttonsContainer.appendChild(buttonEl);
+          });
+        } else {
+          const closeButton = document.createElement("button");
+          closeButton.id = "notification-close-btn"; // Asignar ID
+          closeButton.textContent = "Cerrar";
+          closeButton.className = "bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700";
+          closeButton.onclick = hideNotification;
+          buttonsContainer.appendChild(closeButton);
+        }
+
+        modal.classList.remove("hidden");
+      }
+
+      function hideNotification() {
+        document.getElementById("notification-modal").classList.add("hidden");
+      }
+    </script>
+  </body>
 </html>
